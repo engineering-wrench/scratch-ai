@@ -29176,62 +29176,18 @@ ${innerFunctionsSwitch.join('\n')}
   Extension.prototype["ExtensionID_Block_importBrain"] = function(args, util) {
     const brainName = args.brainName;
     const date = args.date;
-  
-    try {
-      // Assuming date is a string in the format "sizes;biases;weights;options"
-      const data = date.split(";");
-  
-      if (data.length !== 4) {
-        throw new Error("Invalid date format. Expected 'sizes;biases;weights;options'");
-      }
-  
-      // Parse sizes
-      const sizes = data[0].split(",").map(Number);
-      if (sizes.some((size) => isNaN(size))) {
-        throw new Error("Invalid sizes format. Expected comma-separated list of numbers");
-      }
-  
-      // Parse biases
-      const biases = data[1].split(",").map((bias) => {
-        return bias.split(":").map(Number);
-      });
-      if (biases.some((bias) => bias.some((value) => isNaN(value)))) {
-        throw new Error("Invalid biases format. Expected comma-separated list of colon-separated lists of numbers");
-      }
-  
-      // Parse weights
-      const weights = data[2].split(",").map((weight) => {
-        return weight.split(":").map((node) => {
-          return node.split("-").map(Number);
-        });
-      });
-      if (weights.some((weight) => weight.some((node) => node.some((value) => isNaN(value))))) {
-        throw new Error("Invalid weights format. Expected comma-separated list of colon-separated lists of hyphen-separated lists of numbers");
-      }
-  
-      // Parse options
-      const options = JSON.parse(data[3]);
-  
-      // Create a new neural network
-      const neuralNetwork = new brain.NeuralNetwork(options);
-  
-      // Set the sizes
-      neuralNetwork.sizes = sizes;
-  
-      // Initialize the neural network
-      neuralNetwork.initialize();
-  
-      // Set the biases and weights
-      neuralNetwork.biases = biases;
-      neuralNetwork.weights = weights;
-  
-      // Store the neural network under the specified name
-      this.brains[brainName] = neuralNetwork;
-  
-      console.log(`Imported brain '${brainName}' from ${date}`);
-    } catch (error) {
-      console.error(`Error importing brain '${brainName}': ${error.message}`);
+    const modelObject = JSON.parse(date);
+    if (this.brains[brainName]) {
+      delete this.brains[brainName];
     }
+    // create a new neural network instance
+    const neuralNetwork = new brain.NeuralNetwork();
+
+    // import the trained model into the neural network instance
+    neuralNetwork.fromJSON(modelObject);
+
+    // assuming you have a brains object and a brainName variable
+    this.brains[args.brainName] = neuralNetwork;
   };
 
   blocks.push({
@@ -29249,38 +29205,8 @@ ${innerFunctionsSwitch.join('\n')}
 
   Extension.prototype["ExtensionID_Block_exportBrain"] = function(args, util) {
     const brainName = args.brainName;
-  
-    try {
-      // Get the neural network from the brains object
-      const neuralNetwork = this.brains[brainName];
-      if (!neuralNetwork) {
-        throw new Error(`Brain '${brainName}' not found`);
-      }
-  
-      // Get the sizes, biases, weights, and options from the neural network
-      const sizes = neuralNetwork.sizes;
-      const biases = neuralNetwork.biases;
-      const weights = neuralNetwork.weights;
-      const options = neuralNetwork.options;
-  
-      // Convert the biases and weights to strings
-      const biasesString = biases.map((bias) => bias.join(":")).join(",");
-      const weightsString = weights.map((weight) => weight.map((node) => node.join("-")).join(":")).join(",");
-  
-      // Convert the options to a JSON string
-      const optionsString = JSON.stringify(options);
-  
-      // Create the export string
-      const exportString = `${sizes.join(",")};${biasesString};${weightsString};${optionsString}`;
-  
-      // Return the export string
-      return exportString;
-    } catch (error) {
-      console.error(`Error exporting brain '${brainName}': ${error.message}`);
-      return null;
-    }
+    return JSON.stringify(this.brains[brainName]);
   };
 
   Scratch.extensions.register(new Extension());
 })(Scratch);
-
