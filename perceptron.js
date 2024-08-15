@@ -9,10 +9,10 @@
                            netural-network (scratch)
     credit by: 
     * samllea1 (creator)  yt:https://www.youtube.com/channel/UCPP_LWOC_2mCYxxxJyAi6EQ
-    * artem_p4 (support coder) discord: artem_p4 tg: https://t.me/nine_tailed_fox_01 github: engineering-wrench
+    * artem_p4 (main coder) discord: artem_p4 tg: https://t.me/nine_tailed_fox_01 github: engineering-wrench
     * ChopaChops (support coder) tg: https://t.me/chi4achops
     * open source github - https://github.com/BrainJS/brain.js
-    * 
+    * version: 0.5 
     * 
     */
 
@@ -29003,7 +29003,7 @@ ${innerFunctionsSwitch.join('\n')}
   const vars = {};
   const menus = {};
 
-  class Extension {
+  class NvPerceptron {
     constructor() {
       // Create an object to hold all the brains
       this.brains = {};
@@ -29013,17 +29013,17 @@ ${innerFunctionsSwitch.join('\n')}
 
     getInfo() {
       return {
-        "id": "Perceptron",
-        "name": "Perceptron",
-        "color1": "#8687f7",
-        "blocks": blocks,
-        "menus": menus,
-      }
-    }
-  }
+        id: "Perceptron",
+        name: "Perceptron",
+        docsURI: 'https://github.com/engineering-wrench/scratch-ai/wiki',
+        color1: "#8687f7",
+        color2: "#7469c9",
+        color3: "#634d99",
+        blocks: [
+          {
+
   
-  blocks.push({
-    opcode: "realtest_Block_newBrain",
+    opcode: "newBrain",
     blockType: Scratch.BlockType.COMMAND,
     text: "create brain - brain name: [brainName]",
     arguments: {
@@ -29033,15 +29033,36 @@ ${innerFunctionsSwitch.join('\n')}
       },
     },
     disableMonitor: false
-  });
 
-  Extension.prototype["realtest_Block_newBrain"] = function(args, util) {
-    this.brains[args.brainName] = new brain.NeuralNetwork();
-    this.trainingData[args.brainName] = [];
-  };
+          },
+          '---',
+          {
 
-  blocks.push({
-    opcode: "ExtensionID_Block_addTrainingData",
+    opcode: "deleteAllBrains",
+    blockType: Scratch.BlockType.COMMAND,
+    text: "delete all brains",
+    arguments: {},
+    disableMonitor: false
+
+          },
+          {
+
+    opcode: "deleteBrain",
+    blockType: Scratch.BlockType.COMMAND,
+    text: "delete brain with name: [name]",
+    arguments: {
+        "name": {
+        type: Scratch.ArgumentType.STRING,
+        defaultValue: `network`
+      },
+    },
+    disableMonitor: false
+
+          },
+          '---',
+          {
+
+    opcode: "addTrainingData",
     blockType: Scratch.BlockType.COMMAND,
     text: "add training data - brain name: [brainName] inputs: [inputs] outputs: [outputs]",
     arguments: {
@@ -29059,22 +29080,11 @@ ${innerFunctionsSwitch.join('\n')}
       },
     },
     disableMonitor: false
-  });
 
-  Extension.prototype["ExtensionID_Block_addTrainingData"] = function(args, util) {
-    if (!this.brains[args.brainName]) {
-      return `Error: Brain '${args.brainName}' does not exist.`;
-    }
-    const newTrainingData = {
-      input: JSON.parse(args.inputs),
-      output: JSON.parse(args.outputs)
-    };
-    this.trainingData[args.brainName].push(newTrainingData);
-    return 'Training data added';
-  };
+          },
+          {
 
-  blocks.push({
-    opcode: "ExtensionID_Block_train",
+    opcode: "train",
     blockType: Scratch.BlockType.COMMAND,
     text: "train brain - brain name: [networkName]",
     arguments: {
@@ -29084,18 +29094,26 @@ ${innerFunctionsSwitch.join('\n')}
       },
     },
     disableMonitor: false
-  });
 
-  Extension.prototype["ExtensionID_Block_train"] = function(args, util) {
-    if (!this.brains[args.networkName]) {
-      return `Error: Brain '${args.networkName}' does not exist.`;
-    }
-    this.brains[args.networkName].train(this.trainingData[args.networkName]);
-    return 'Training completed';
-  };
+          },
+          {
 
-  blocks.push({
-    opcode: "realtest_Block_data",
+    opcode: "cleandata",
+    blockType: Scratch.BlockType.COMMAND,
+    text: "clean training data [brainName]",
+    arguments: {
+      "brainName": {
+        type: Scratch.ArgumentType.STRING,
+        defaultValue: `network`
+      },
+    },
+    disableMonitor: false
+
+          },
+          '---',
+          {
+
+    opcode: "data",
     blockType: Scratch.BlockType.REPORTER,
     text: "get data - brain name: [networkName] input: [dataInput]",
     arguments: {
@@ -29110,54 +29128,12 @@ ${innerFunctionsSwitch.join('\n')}
       },
     },
     disableMonitor: false
-  });
 
-  Extension.prototype["realtest_Block_data"] = function(args, util) {
-    if (!this.brains[args.networkName]) {
-      return `Error: Brain '${args.networkName}' does not exist.`;
-    }
-    const result = this.brains[args.networkName].run(JSON.parse(args.dataInput));
-    return result;
-  };
+          },
+          '---',
+          {
 
-  blocks.push({
-    opcode: "ExtensionID_Block_deleteAllBrains",
-    blockType: Scratch.BlockType.COMMAND,
-    text: "delete all brains",
-    arguments: {},
-    disableMonitor: false
-  });
-
-  Extension.prototype["ExtensionID_Block_deleteAllBrains"] = function(args, util) {
-    this.brains = {};
-    this.trainingData = {};
-    return 'All brains deleted';
-  };
-
-  blocks.push({
-    opcode: "ExtensionID_Block_deleteBrain",
-    blockType: Scratch.BlockType.COMMAND,
-    text: "delete brain with name: [name]",
-    arguments: {
-        "name": {
-        type: Scratch.ArgumentType.STRING,
-        defaultValue: `network`
-      },
-    },
-    disableMonitor: false
-  });
-
-  Extension.prototype["ExtensionID_Block_deleteBrain"] = function(args, util) {
-    if (!this.brains[args.name]) {
-      return `Error: Brain '${args.name}' does not exist.`;
-    }
-    delete this.brains[args.name];
-    delete this.trainingData[args.name];
-    return 'Brain deleted';
-  };
-
-  blocks.push({
-    opcode: "ExtensionID_Block_importBrain",
+    opcode: "importBrain",
     blockType: Scratch.BlockType.COMMAND,
     text: "import brain - brain name: [brainName] date: [date]",
     arguments: {
@@ -29171,27 +29147,11 @@ ${innerFunctionsSwitch.join('\n')}
       },
     },
     disableMonitor: false
-  });
 
-  Extension.prototype["ExtensionID_Block_importBrain"] = function(args, util) {
-    const brainName = args.brainName;
-    const date = args.date;
-    const modelObject = JSON.parse(date);
-    if (this.brains[brainName]) {
-      delete this.brains[brainName];
-    }
-    // create a new neural network instance
-    const neuralNetwork = new brain.NeuralNetwork();
+          },
+          {
 
-    // import the trained model into the neural network instance
-    neuralNetwork.fromJSON(modelObject);
-
-    // assuming you have a brains object and a brainName variable
-    this.brains[args.brainName] = neuralNetwork;
-  };
-
-  blocks.push({
-    opcode: "ExtensionID_Block_exportBrain",
+    opcode: "exportBrain",
     blockType: Scratch.BlockType.REPORTER,
     text: "export brain - brain name: [brainName]",
     arguments: {
@@ -29201,12 +29161,91 @@ ${innerFunctionsSwitch.join('\n')}
       },
     },
     disableMonitor: false
-  });
 
-  Extension.prototype["ExtensionID_Block_exportBrain"] = function(args, util) {
+  
+  }
+
+          ]
+        }
+      }
+    
+
+    exportBrain(args, util) {
+      const brainName = args.brainName;
+      return JSON.stringify(this.brains[brainName]);
+    };
+
+    importBrain(args, util) {
+      const brainName = args.brainName;
+      const date = args.date;
+      const modelObject = JSON.parse(date);
+      if (this.brains[brainName]) {
+        delete this.brains[brainName];
+      }
+      // create a new neural network instance
+      const neuralNetwork = new brain.NeuralNetwork();
+  
+      // import the trained model into the neural network instance
+      neuralNetwork.fromJSON(modelObject);
+  
+      // assuming you have a brains object and a brainName variable
+      this.brains[args.brainName] = neuralNetwork;
+    };
+
+
+    data(args, util) {
+      if (!this.brains[args.networkName]) {
+        return `Error: Brain '${args.networkName}' does not exist.`;
+      }
+      const result = this.brains[args.networkName].run(JSON.parse(args.dataInput));
+      return result;
+    };
+
+    newBrain(args, util) {
+    this.brains[args.brainName] = new brain.NeuralNetwork();
+    this.trainingData[args.brainName] = [];
+    };
+
+    cleandata(args, util) {
     const brainName = args.brainName;
-    return JSON.stringify(this.brains[brainName]);
-  };
+    this.trainingData[brainName] = [];
+    };
 
-  Scratch.extensions.register(new Extension());
+    train(args, util) {
+    if (!this.brains[args.networkName]) {
+      return `Error: Brain '${args.networkName}' does not exist.`;
+    }
+    this.brains[args.networkName].train(this.trainingData[args.networkName]);
+    return 'Training completed';
+    };
+
+    addTrainingData(args, util) {
+    if (!this.brains[args.brainName]) {
+      return `Error: Brain '${args.brainName}' does not exist.`;
+    }
+    const newTrainingData = {
+      input: JSON.parse(args.inputs),
+      output: JSON.parse(args.outputs)
+    };
+    this.trainingData[args.brainName].push(newTrainingData);
+    return 'Training data added';
+    };
+
+    deleteBrain(args, util) {
+    if (!this.brains[args.name]) {
+      return `Error: Brain '${args.name}' does not exist.`;
+    }
+    delete this.brains[args.name];
+    delete this.trainingData[args.name];
+    return 'Brain deleted';
+    };
+
+    deleteAllBrains(args, util) {
+    this.brains = {};
+    this.trainingData = {};
+    return 'All brains deleted';
+    }
+  }
+
+  Scratch.extensions.register(new NvPerceptron());
 })(Scratch);
