@@ -12,7 +12,7 @@
     * artem_p4 (main coder) discord: artem_p4 tg: https://t.me/nine_tailed_fox_01 github: engineering-wrench
     * ChopaChops (support coder) tg: https://t.me/chi4achops
     * open source github - https://github.com/BrainJS/brain.js
-    * version: 0.6
+    * version: 0.7
     * 
     */
 
@@ -29034,6 +29034,32 @@ ${innerFunctionsSwitch.join('\n')}
             disableMonitor: false
 
           },
+
+          {
+            opcode: "setConfig",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set config - brain name: [brainName] hidden layers: [hiddenLayers] learning rate: [learningRate] activation: [act]",
+            arguments: {
+              "brainName": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: `network`
+              },
+              "hiddenLayers": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: `[2]`
+              },
+              "learningRate": {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: `0.1`
+              },
+              "act": {
+                type: Scratch.ArgumentType.NUMBER,
+                menu: 'ACTIVATION'
+              },
+            },
+            disableMonitor: false
+          },
+
           '---',
           {
 
@@ -29080,6 +29106,26 @@ ${innerFunctionsSwitch.join('\n')}
             },
             disableMonitor: false
 
+          },
+          {
+            opcode: "setTrainingConfig",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set training config - brain name: [brainName] error threshold: [errorThreshold] max iterations: [maxIterations]",
+            arguments: {
+              "brainName": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: `network`
+              },
+              "errorThreshold": {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: `0.005`
+              },
+              "maxIterations": {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: `1000`
+              },
+            },
+            disableMonitor: false
           },
           {
 
@@ -29161,9 +29207,36 @@ ${innerFunctionsSwitch.join('\n')}
             },
             disableMonitor: false
 
-          }
+          },
+          '---',
+          {
+            opcode: "listBrains",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "list all brains",
+            arguments: {},
+            disableMonitor: false
+          },
+          {
+            opcode: "listTrainingData",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "list training data for brain [brainName]",
+            arguments: {
+              "brainName": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: `network`
+              },
+            },
+            disableMonitor: false
+          },
 
-          ]
+          ],
+          menus: {
+            ACTIVATION: {
+              acceptReporters: true,
+              items: ['sigmoid', 'relu','leaky-relu','tanh']
+            }
+          }
+    
         }
       }
     
@@ -29210,12 +29283,37 @@ ${innerFunctionsSwitch.join('\n')}
       this.trainingData[args.brainName] = [];
     };
 
+    setConfig(args, util) {
+      const brainName = args.brainName;
+      if (!this.brains[brainName]) {
+        throw new Error(`Brain '${brainName}' does not exist.`);
+      }
+      let config;
+      try {
+        config = {
+          hiddenLayers: JSON.parse(args.hiddenLayers),
+          learningRate: args.learningRate,
+          activation: args.act
+        };
+        if (!Array.isArray(config.hiddenLayers)) {
+          throw new Error('hiddenLayers must be an array');
+        }
+        if (config.learningRate < 0 || config.learningRate > 1) {
+          throw new Error('learningRate must be between 0 and 1');
+        }
+      } catch (error) {
+        throw new Error(`Error setting config for brain '${brainName}': ${error.message}`);
+      }
+      this.brains[brainName].config = config;
+    }
+
     cleandata(args, util) {
       const brainName = args.brainName;
       if (!this.brains[brainName]) {
         throw new Error(`Brain '${brainName}' does not exist.`);
       }
-      this.trainingData[brainName] = [];
+        this.trainingData[brainName] = [];
+
     };
 
     train(args, util) {
@@ -29225,7 +29323,25 @@ ${innerFunctionsSwitch.join('\n')}
       if (this.trainingData[args.networkName].length === 0) {
         throw new Error(`No training data for brain '${args.networkName}'.`);
       }
-      this.brains[args.networkName].train(this.trainingData[args.networkName]);
+      this.brains[args.networkName].train(this.trainingData[args.networkName],this.brains[args.networkName].trainingConfig);
+    };
+
+    setTrainingConfig(args, util) {
+      const brainName = args.brainName;
+      if (!this.brains[brainName]) {
+        throw new Error(`Brain '${brainName}' does not exist.`);
+      }
+      if (args.integrationNumber <= 0) {
+        throw new Error(`Integration number must be greater than 0.`);
+      }
+      if (args.errorThreshold < 0 || args.errorThreshold > 1) {
+        throw new Error(`Error threshold must be between 0 and 1.`);
+      }
+      const trainingConfig = {
+        errorThresh: args.errorThreshold,
+        iterations: args.maxIterations
+      };
+      this.brains[brainName].trainingConfig = trainingConfig;
     };
 
     addTrainingData(args, util) {
@@ -29250,6 +29366,21 @@ ${innerFunctionsSwitch.join('\n')}
     deleteAllBrains(args, util) {
       this.brains = {};
       this.trainingData = {};
+    };
+    listBrains(args, util) {
+      const brainNames = Object.keys(this.brains);
+      return brainNames;
+    };
+    listTrainingData(args, util) {
+      const brainName = args.brainName;
+      if (!this.brains[brainName]) {
+        throw new Error(`Brain '${brainName}' does not exist.`);
+      }
+      const trainingData = this.trainingData[brainName];
+      if (!trainingData) {
+        return "No training data for brain '" + brainName + "'.";
+      }
+      return JSON.stringify(trainingData, null, 2);
     }
   }
 
